@@ -30,12 +30,12 @@ public class InvoiceSummaryQueryHandler : IHandler<InvoiceSummaryQuery, SummaryD
         var normalizedInvoices = invoices.Select(x =>
         {
             var dto = NormalizedInvoiceDto.FromEntity(x);
-            if (x.CurrencyCode != destinationCurrency)
+            if (!x.CurrencyCode.Equals(destinationCurrency, StringComparison.InvariantCulture))
             {
-                x.CurrencyCode = destinationCurrency;
                 var ratio = _currencyConverter.GetRatio(x.CurrencyCode, destinationCurrency);
                 dto.NormalizedOpeningValue = x.OpeningValue * ratio;
                 dto.NormalizedPaidValue *= x.PaidValue * ratio;
+                x.CurrencyCode = destinationCurrency;
             }
             else
             {

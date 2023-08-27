@@ -13,7 +13,7 @@ public class InvoiceController : ControllerBase
 {
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> ImportInvoices([FromBody] List<ImportInvoiceDto> dtos,
         [FromServices] IHandler<ImportInvoiceCommand, bool> importCommandHandler,
@@ -24,12 +24,14 @@ public class InvoiceController : ControllerBase
         if (!validationResult.IsValid)
             return BadRequest(validationResult.Errors);
 
-        return await importCommandHandler.Handle(importInvoiceCommand) ? Ok() : CreatedAtRoute(null, null);
+        return await importCommandHandler.Handle(importInvoiceCommand) ? Ok() : Conflict("No resource was created");
     }
 
-    [HttpGet]
+    [HttpGet("summary")]
+
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]    public async Task<ActionResult<SummaryDto>> GetInvoiceSummary([FromQuery] InvoiceSummaryQuery query,
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<SummaryDto>> GetInvoiceSummary([FromQuery] InvoiceSummaryQuery query,
         [FromServices] IHandler<InvoiceSummaryQuery, SummaryDto> summaryQueryHandler,
         [FromServices] IValidator<InvoiceSummaryQuery> validator)
     {

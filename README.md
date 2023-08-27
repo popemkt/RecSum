@@ -1,12 +1,16 @@
 ## How to run
 - Use an IDE of choice to run the project normally (VsCode, VisualStudio, Rider)
 - Use the command line
+- Test the swagger UI
+  - The 2 supported currencies are only VND and USD
+  - 
 
 ## Considerations
 - Do want to on program.cs
 - Do want to implement proper error handling, which emcompasses domain error as well, all within the business logic pipeline
 - Work more on the dynamic supported currencies
 - Explore more summary statistics?
+- Country code more safe
 
 ## Decisions
 - Simple separated of concerns architecture
@@ -19,4 +23,3 @@
 
 ## Summary
 - Time spent: ~5h
-- 

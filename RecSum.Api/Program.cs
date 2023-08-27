@@ -1,46 +1,26 @@
-using System.Net;
-using System.Text.Json;
-using Microsoft.AspNetCore.Diagnostics;
-using RecSum.Application;
-using RecSum.DataAccess;
-using RecSum.Domain.Configurations;
-using RecSum.Infrastructure;
+namespace RecSum;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var dbPath = Path.Join(Directory.GetCurrentDirectory(), "rec-sum.db");
-
-builder.Services.AddAppSqllite(dbPath)
-    .AddRepositories()
-    .AddApplicationServices(builder.Configuration.GetSection(SummaryConfiguration.SectionName))
-    .AddInfrastructureServices();
-
-var app = builder.Build();
-
-app.UseExceptionHandler(app =>
-{
-    app.Run(
-        async context =>
+public class Program
+{  
+    public static async Task Main(string[] args) {  
+        
+        Console.WriteLine($"Starting RecSum api at {DateTime.UtcNow:o}");
+        try
         {
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            context.Response.ContentType = "text/html";
-            await context.Response.WriteAsync("Internal Server Error").ConfigureAwait(false);
-        });
-});
-app.UseSwagger();
-app.UseSwaggerUI();
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+            await BuildWebHost(args)
+                .Build()
+                .RunAsync();
+            Console.WriteLine($"Stopping RecSum api at {DateTime.UtcNow:o}");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Shutting down because exception occured at {DateTime.UtcNow:o}: \n {e.Message} \n {e.InnerException?.Message} \n {e.StackTrace}");
+        }
+    }  
+    public static IHostBuilder BuildWebHost(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Startup>();
+            });  
+}

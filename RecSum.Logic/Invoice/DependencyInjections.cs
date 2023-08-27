@@ -17,6 +17,7 @@ public static class DependencyInjections
         services.AddScoped<IHandler<ImportInvoiceCommand, bool>, InvoiceImportCommandHandler>();
         services.AddTransient<ISummaryCalculator, SummaryCalculator>();
         services.AddTransient<IValidator<ImportInvoiceCommand>, ImportInvoiceValidator>();
+        services.AddTransient<IValidator<InvoiceSummaryQuery>, InvoiceQueryValidator>();
         services.AddTransient<ISummaryCalculator, SummaryCalculator>();
         return services;
     }

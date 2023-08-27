@@ -13,10 +13,14 @@ public class SummaryCalculator : ISummaryCalculator
         var openInvoices = invoicesNotCancelled.Where(x => !x.ClosedDate.HasValue).ToList();
         var openOverdueInvoices = openInvoices.Where(x => x.DueDate < today).ToList();
 
+
+        var totalInvoiceValue = invoicesNotCancelled.Sum(x => x.NormalizedOpeningValue);
+        var totalOutstandingValue = openInvoices.Sum(x => x.NormalizedOpeningValue - x.NormalizedPaidValue);
+        
         return new SummaryDto()
         {
             NumberOfDebtors = invoices.Select(x => x.DebtorReference).Distinct().Count(),
-            TotalInvoiceValue = invoicesNotCancelled.Sum(x => x.NormalizedOpeningValue),
+            TotalInvoiceValue = totalInvoiceValue,
             AverageInvoiceValue = invoicesNotCancelled.Any()
                 ? invoicesNotCancelled.Select(x => x.NormalizedOpeningValue).Average()
                 : null,
@@ -26,21 +30,22 @@ public class SummaryCalculator : ISummaryCalculator
             NumberOfClosedInvoices = closedInvoices.Count,
             ClosedInvoicesValue = closedInvoices.Sum(x => x.NormalizedOpeningValue),
             NumberOfOpenInvoices = openInvoices.Count,
-            OpenInvoicesOutstandingValue = openInvoices.Sum(x => x.NormalizedOpeningValue - x.NormalizedPaidValue),
+            OpenInvoicesOutstandingValue = totalOutstandingValue,
             NumberOfOpenOverdueInvoices = openOverdueInvoices.Count,
             TotalOpenOverdueAmount = openOverdueInvoices.Sum(x => x.NormalizedOpeningValue - x.NormalizedPaidValue),
             AverageOpenOverduePeriod = openOverdueInvoices.Any()
-                ? openOverdueInvoices.Select(x => (x.DueDate - today).Days).Average()
+                ? openOverdueInvoices.Select(x => (today - x.DueDate).Days).Average()
                 : null,
             TotalPaidValue = invoicesNotCancelled.Sum(x => x.NormalizedPaidValue),
             NumberOfCancelledInvoices = invoices.Count(x => x.Cancelled == true),
-            InvoiceValueDistribution = invoicesNotCancelled.GroupBy(x => x.DebtorCountryCode)
+            InvoiceValueDistribution = invoicesNotCancelled
+                .GroupBy(x => x.DebtorCountryCode)
                 .ToDictionary(x => x.Key,
-                    x => x.Sum(x => x.NormalizedOpeningValue)),
+                    x => Math.Round(x.Sum(x => x.NormalizedOpeningValue)/totalInvoiceValue, 2)),
             OutstandingValueDistribution = invoicesNotCancelled.Where(x => x.ClosedDate is null)
                 .GroupBy(x => x.DebtorCountryCode)
                 .ToDictionary(x => x.Key,
-                    x => x.Sum(x => x.NormalizedOpeningValue - x.NormalizedPaidValue)),
+                    x => Math.Round(x.Sum(x => x.NormalizedOpeningValue - x.NormalizedPaidValue)/totalOutstandingValue, 2)),
         };
     }
 }
