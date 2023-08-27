@@ -11,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecSum.Application", "RecSum.Application\RecSum.Application.csproj", "{BC439AE5-D055-41B1-924F-77E4F15F99B0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecSum.Logic", "RecSum.Logic\RecSum.Logic.csproj", "{BC439AE5-D055-41B1-924F-77E4F15F99B0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecSum.Infrastructure", "RecSum.Infrastructure\RecSum.Infrastructure.csproj", "{4142E578-36E5-477B-90EC-2C6C36AC4242}"
 EndProject

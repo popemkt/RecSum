@@ -1,5 +1,7 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using RecSum.Application.Invoice;
+using RecSum.Application.Invoice.Handlers;
 using RecSum.Domain.Invoice;
 using RecSum.Domain.Invoice.Dtos;
 
@@ -9,22 +11,32 @@ namespace RecSum.Controllers;
 [Route("invoices")]
 public class InvoiceController : ControllerBase
 {
-    private readonly IInvoiceRepository _invoiceRepository;
-
-    public InvoiceController(IInvoiceRepository invoiceRepository)
-    {
-        _invoiceRepository = invoiceRepository;
-    }
-
     [HttpPost]
-    public Task ImportInvoices(List<ImportInvoiceDto> dtos)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult> ImportInvoices([FromBody] List<ImportInvoiceDto> dtos,
+        [FromServices] IHandler<ImportInvoiceCommand, bool> importCommandHandler,
+        [FromServices] IValidator<ImportInvoiceCommand> validator)
     {
-        return _invoiceRepository.ImportInvoicesAsync(dtos);
+        var importInvoiceCommand = new ImportInvoiceCommand().WithDtos(dtos);
+        var validationResult = await validator.ValidateAsync(importInvoiceCommand);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        return await importCommandHandler.Handle(importInvoiceCommand) ? Ok() : CreatedAtRoute(null, null);
     }
-    
+
     [HttpGet]
-    public async Task<SummaryDto> GetInvoiceSummary([FromQuery]GetInvoiceSummaryQuery query)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]    public async Task<ActionResult<SummaryDto>> GetInvoiceSummary([FromQuery] InvoiceSummaryQuery query,
+        [FromServices] IHandler<InvoiceSummaryQuery, SummaryDto> summaryQueryHandler,
+        [FromServices] IValidator<InvoiceSummaryQuery> validator)
     {
-        return await _invoiceRepository.GetInvoiceSummaryAsync(query);
+        var validationResult = await validator.ValidateAsync(query);
+        if (!validationResult.IsValid)
+            BadRequest(validationResult.Errors);
+
+        return Ok(await summaryQueryHandler.Handle(query));
     }
 }

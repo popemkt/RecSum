@@ -7,8 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\RecSum.Application\RecSum.Application.csproj" />
-      <ProjectReference Include="..\RecSum.DataAccess\RecSum.DataAccess.csproj" />
+      <ProjectReference Include="..\RecSum.Logic\RecSum.Logic.csproj" />
     </ItemGroup>
 
 

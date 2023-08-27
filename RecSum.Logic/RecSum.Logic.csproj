@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>RecSum.Application</RootNamespace>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+      <ProjectReference Include="..\RecSum.DataAccess\RecSum.DataAccess.csproj" />
+      <ProjectReference Include="..\RecSum.Domain\RecSum.Domain.csproj" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <Reference Include="Microsoft.Extensions.Configuration.Abstractions">
+        <HintPath>..\..\..\.nuget\packages\microsoft.extensions.configuration.abstractions\7.0.0\lib\net7.0\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
+      </Reference>
+      <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
+        <HintPath>..\..\..\.nuget\packages\microsoft.extensions.dependencyinjection.abstractions\7.0.0\lib\net7.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+
+
+
+    <ItemGroup>
+      <PackageReference Include="FluentValidation" Version="11.7.1" />
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
+    </ItemGroup>
+
+
+
+
+
+
+
+
+
+</Project>

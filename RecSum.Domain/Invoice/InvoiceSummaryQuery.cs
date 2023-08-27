@@ -1,6 +1,6 @@
 namespace RecSum.Domain.Invoice;
 
-public class GetInvoiceSummaryQuery
+public class InvoiceSummaryQuery
 {
     public int? MonthsToConsider {
         get;

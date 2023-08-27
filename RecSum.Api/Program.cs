@@ -1,5 +1,9 @@
+using System.Net;
+using System.Text.Json;
+using Microsoft.AspNetCore.Diagnostics;
 using RecSum.Application;
 using RecSum.DataAccess;
+using RecSum.Domain.Configurations;
 using RecSum.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,19 +15,27 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var dbPath = System.IO.Path.Join(Directory.GetCurrentDirectory(), "rec-sum.db");
-builder.Services.AddAppSqllite(dbPath);
-builder.Services.AddRecSumDataAccessServices();
-builder.Services.AddInvoiceServices();
+var dbPath = Path.Join(Directory.GetCurrentDirectory(), "rec-sum.db");
+
+builder.Services.AddAppSqllite(dbPath)
+    .AddRepositories()
+    .AddApplicationServices(builder.Configuration.GetSection(SummaryConfiguration.SectionName))
+    .AddInfrastructureServices();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseExceptionHandler(app =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    app.Run(
+        async context =>
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            context.Response.ContentType = "text/html";
+            await context.Response.WriteAsync("Internal Server Error").ConfigureAwait(false);
+        });
+});
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 

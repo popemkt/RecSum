@@ -11,5 +11,6 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
     {
         builder.ToTable(nameof(Invoice));
         builder.HasKey(x => x.Reference);
+        builder.HasIndex(x => x.IssueDate);
     }
 }
