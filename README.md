@@ -5,6 +5,7 @@
 ```dotnet run --project RecSum.Api/RecSum.Api.csproj```
 - Test the swagger UI at http://localhost:5116/swagger/index.html
   - The 2 supported currencies are only VND and USD
+- To run the tests execute ```dotnet tests``` at repo's root folder
 
 ## Future considerations
 - Proper error handling, which emcompasses domain error as well, all within the business logic pipeline

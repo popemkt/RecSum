@@ -37,7 +37,7 @@ public class InvoiceController : ControllerBase
     {
         var validationResult = await validator.ValidateAsync(query);
         if (!validationResult.IsValid)
-            BadRequest(validationResult.Errors);
+            return BadRequest(validationResult.Errors);
 
         return Ok(await summaryQueryHandler.Handle(query));
     }

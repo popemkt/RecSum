@@ -1,12 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using Bogus;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.JSInterop.Infrastructure;
 using RecSum.DataAccess;
 using RecSum.Domain.Configurations;
 using RecSum.Domain.Constants;
@@ -17,24 +14,14 @@ using Shouldly;
 
 namespace RecSum.IntegrationTests;
 
-public class InvoiceControllerTests : IClassFixture<TestWebApplicationFactory<Startup>>
+public class InvoiceControllerTests
 {
-    private readonly TestWebApplicationFactory<Startup> _factory;
-    private readonly HttpClient _client;
-    private readonly Faker _faker;
-    private readonly IServiceProvider _serviceProvider;
-
-    public InvoiceControllerTests(TestWebApplicationFactory<Startup> factory)
-    {
-        _faker = new Faker();
-        _factory = factory;
-        _serviceProvider = _factory.Services;
-        _client = _factory.CreateClient();
-    }
+    private readonly Faker _faker = new();
 
     [Fact]
     public async Task ImportInvoices_WithValidData_ShouldSucceedAndSaveCorrectData()
     {
+        var (client, serviceProvider) = CreateClient();
         var dtos = Enumerable.Range(1, 10).Select(_ => new ImportInvoiceDto()
         {
             Reference = Guid.NewGuid().ToString(),
@@ -55,9 +42,9 @@ public class InvoiceControllerTests : IClassFixture<TestWebApplicationFactory<St
         }).ToList();
 
 
-        var result = await _client.PostAsJsonAsync("/invoices", dtos);
+        var result = await client.PostAsJsonAsync("/invoices", dtos);
 
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<RecSumContext>();
 
         result.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -83,12 +70,90 @@ public class InvoiceControllerTests : IClassFixture<TestWebApplicationFactory<St
             dbInvoice.DebtorState.ShouldBe(dto.DebtorState);
         }
     }
+    
+    [Fact]
+    public async Task ImportInvoices_WithSameIds_ShouldBeIgnored()
+    {
+        var (client, serviceProvider) = CreateClient();
+        var dtos = Enumerable.Range(1, 10).Select(_ => new ImportInvoiceDto()
+        {
+            Reference = Guid.NewGuid().ToString(),
+            DebtorReference = Guid.NewGuid().ToString(),
+            CurrencyCode = CurrencyCode.VND,
+            DebtorName = _faker.Name.FullName(),
+            DebtorCountryCode = _faker.Address.CountryCode(),
+            IssueDate = DateTime.UtcNow.Date,
+            DueDate = DateTime.UtcNow.Date.AddDays(1),
+            Cancelled = true,
+            OpeningValue = 10000,
+            DebtorAddress1 = _faker.Address.FullAddress(),
+            DebtorAddress2 = _faker.Address.FullAddress(),
+            DebtorTown = _faker.Address.City(),
+            DebtorZip = _faker.Address.ZipCode(),
+            DebtorState = _faker.Address.State(),
+            DebtorRegistrationNumber = _faker.Finance.Bic(),
+        }).ToList();
+
+
+        var result = await client.PostAsJsonAsync("/invoices", dtos);
+        result.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        using var scope = serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<RecSumContext>();
+
+        var dbInvoices = await context.Invoices.ToListAsync();
+        dbInvoices.Count.ShouldBe(10);
+        
+        result = await client.PostAsJsonAsync("/invoices", dtos);
+        result.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        
+        dbInvoices = await context.Invoices.ToListAsync();
+        dbInvoices.Count.ShouldBe(10);
+    }
+
+    [Fact]
+    public async Task ImportInvoices_WithInvalidData_ShouldReturnBadRequest()
+    {
+
+        var (client, _) = CreateClient();
+
+        var dtos = new List<ImportInvoiceDto>()
+        {
+            new()
+            {
+                DebtorReference = Guid.NewGuid().ToString(),
+                CurrencyCode = CurrencyCode.VND,
+                DebtorName = _faker.Name.FullName(),
+                DebtorCountryCode = _faker.Address.CountryCode(),
+                IssueDate = DateTime.UtcNow.Date,
+                DueDate = DateTime.UtcNow.Date.AddDays(1),
+                Cancelled = true,
+                OpeningValue = 10000,
+                DebtorAddress1 = _faker.Address.FullAddress(),
+                DebtorAddress2 = _faker.Address.FullAddress(),
+                DebtorTown = _faker.Address.City(),
+                DebtorZip = _faker.Address.ZipCode(),
+                DebtorState = _faker.Address.State(),
+                DebtorRegistrationNumber = _faker.Finance.Bic(),
+            }
+        };
+
+        var result = await client.PostAsJsonAsync("/invoices", dtos);
+        result.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        dtos[0].Reference = Guid.NewGuid().ToString();
+        
+        result = await client.PostAsJsonAsync("/invoices", dtos);
+        result.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
 
 
     [Fact]
     public async Task SummaryQuery_ShouldSucceed()
     {
-        using var scope = _serviceProvider.CreateScope();
+        var (client, serviceProvider) = CreateClient();
+
+        using var scope = serviceProvider.CreateScope();
         var dtos = Enumerable.Range(1, 10).Select(_ => new ImportInvoiceDto()
         {
             Reference = Guid.NewGuid().ToString(),
@@ -108,17 +173,19 @@ public class InvoiceControllerTests : IClassFixture<TestWebApplicationFactory<St
             DebtorRegistrationNumber = _faker.Finance.Bic(),
         }).ToList();
 
-        var result = await _client.PostAsJsonAsync("/invoices", dtos);
+        var result = await client.PostAsJsonAsync("/invoices", dtos);
         result.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var summaryResult = await _client.GetAsync("/invoices/summary");
+        var summaryResult = await client.GetAsync("/invoices/summary");
         summaryResult.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     [Fact]
     public async Task SummaryQuery_ShouldCorrectlySummarize()
     {
-        using var scope = _serviceProvider.CreateScope();
+        var (client, serviceProvider) = CreateClient();
+
+        using var scope = serviceProvider.CreateScope();
         var dtos = new List<ImportInvoiceDto>()
         {
             //Open
@@ -151,7 +218,7 @@ public class InvoiceControllerTests : IClassFixture<TestWebApplicationFactory<St
                 IssueDate = DateTime.UtcNow.Date,
                 DueDate = DateTime.UtcNow.Date.AddDays(-10),
                 Cancelled = false,
-                OpeningValue = 10000,//After converting will be 20000
+                OpeningValue = 10000, //After converting will be 20000
                 DebtorAddress1 = _faker.Address.FullAddress(),
                 DebtorAddress2 = _faker.Address.FullAddress(),
                 DebtorTown = _faker.Address.City(),
@@ -190,7 +257,7 @@ public class InvoiceControllerTests : IClassFixture<TestWebApplicationFactory<St
                 DueDate = DateTime.UtcNow.Date.AddDays(1),
                 ClosedDate = DateTime.UtcNow.Date.AddMonths(-1),
                 Cancelled = false,
-                OpeningValue = 5000,//After converting will be 10000
+                OpeningValue = 5000, //After converting will be 10000
                 DebtorAddress1 = _faker.Address.FullAddress(),
                 DebtorAddress2 = _faker.Address.FullAddress(),
                 DebtorTown = _faker.Address.City(),
@@ -200,12 +267,12 @@ public class InvoiceControllerTests : IClassFixture<TestWebApplicationFactory<St
             },
         };
 
-        var result = await _client.PostAsJsonAsync("/invoices", dtos);
+        var result = await client.PostAsJsonAsync("/invoices", dtos);
         result.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var config = scope.ServiceProvider.GetRequiredService<IOptions<SummaryConfiguration>>();
-        
-        var summaryResult = await _client.GetAsync("/invoices/summary");
+
+        var summaryResult = await client.GetAsync("/invoices/summary");
         summaryResult.StatusCode.ShouldBe(HttpStatusCode.OK);
         var summary = await summaryResult.GetContentAsync<SummaryDto>();
         summary.AverageInvoiceValue.ShouldBe(15000);
@@ -214,12 +281,12 @@ public class InvoiceControllerTests : IClassFixture<TestWebApplicationFactory<St
         summary.ClosedInvoicesValue.ShouldBe(20000);
         summary.CurrencyCode.ShouldBe(config.Value.DefaultCurrencyCode);
         summary.DataRecencyInMonths.ShouldBe(config.Value.MonthsToConsider);
-        summary.InvoiceValueDistribution["VN"].ShouldBeEquivalentTo(Math.Round(1f/3, 2));
-        summary.InvoiceValueDistribution["UK"].ShouldBeEquivalentTo(Math.Round(1f/3, 2));
-        summary.InvoiceValueDistribution["VN2"].ShouldBeEquivalentTo(Math.Round(1f/6, 2));
-        summary.InvoiceValueDistribution["VN2"].ShouldBeEquivalentTo(Math.Round(1f/6, 2));
-        summary.OutstandingValueDistribution["VN"].ShouldBeEquivalentTo(Math.Round(1f/2, 2));
-        summary.OutstandingValueDistribution["UK"].ShouldBeEquivalentTo(Math.Round(1f/2, 2));
+        summary.InvoiceValueDistribution["VN"].ShouldBeEquivalentTo(Math.Round(1f / 3, 2));
+        summary.InvoiceValueDistribution["UK"].ShouldBeEquivalentTo(Math.Round(1f / 3, 2));
+        summary.InvoiceValueDistribution["VN2"].ShouldBeEquivalentTo(Math.Round(1f / 6, 2));
+        summary.InvoiceValueDistribution["VN2"].ShouldBeEquivalentTo(Math.Round(1f / 6, 2));
+        summary.OutstandingValueDistribution["VN"].ShouldBeEquivalentTo(Math.Round(1f / 2, 2));
+        summary.OutstandingValueDistribution["UK"].ShouldBeEquivalentTo(Math.Round(1f / 2, 2));
         summary.NumberOfCancelledInvoices.ShouldBe(0);
         summary.NumberOfClosedInvoices.ShouldBe(2);
         summary.NumberOfDebtors.ShouldBe(4);
@@ -227,5 +294,53 @@ public class InvoiceControllerTests : IClassFixture<TestWebApplicationFactory<St
         summary.NumberOfOpenOverdueInvoices.ShouldBe(1);
         summary.OpenInvoicesOutstandingValue.ShouldBe(40000);
         summary.TotalInvoiceValue.ShouldBe(60000);
+    }
+    
+        [Fact]
+    public async Task SummaryQuery_WithNoData_ShouldCorrectlySummarize()
+    {
+        var (client, serviceProvider) = CreateClient();
+
+        using var scope = serviceProvider.CreateScope();
+        var config = scope.ServiceProvider.GetRequiredService<IOptions<SummaryConfiguration>>();
+
+        var summaryResult = await client.GetAsync("/invoices/summary");
+        summaryResult.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var summary = await summaryResult.GetContentAsync<SummaryDto>();
+        summary.AverageInvoiceValue.ShouldBe(null);
+        summary.AverageOpenOverduePeriod.ShouldBe(null);
+        summary.AveragePaymentPeriod.ShouldBe(null);
+        summary.ClosedInvoicesValue.ShouldBe(0);
+        summary.CurrencyCode.ShouldBe(config.Value.DefaultCurrencyCode);
+        summary.DataRecencyInMonths.ShouldBe(config.Value.MonthsToConsider);
+        summary.InvoiceValueDistribution.ShouldBeEmpty();
+        summary.OutstandingValueDistribution.ShouldBeEmpty();
+        summary.NumberOfCancelledInvoices.ShouldBe(0);
+        summary.NumberOfClosedInvoices.ShouldBe(0);
+        summary.NumberOfDebtors.ShouldBe(0);
+        summary.NumberOfOpenInvoices.ShouldBe(0);
+        summary.NumberOfOpenOverdueInvoices.ShouldBe(0);
+        summary.OpenInvoicesOutstandingValue.ShouldBe(0);
+        summary.TotalInvoiceValue.ShouldBe(0);
+    }
+    
+    [Fact]
+    public async Task SummaryQuery_WithInvalidQueryParameter_ShouldReturnBadRequest()
+    {
+        var (client, serviceProvider) = CreateClient();
+
+        using var scope = serviceProvider.CreateScope();
+
+        var summaryResult = await client.GetAsync($"/invoices/summary?monthsToConsider={0}&currency={Guid.NewGuid()}");
+        summaryResult.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        
+        summaryResult = await client.GetAsync($"/invoices/summary?monthsToConsider={49}&currency=HK");
+        summaryResult.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    private (HttpClient Client, IServiceProvider ServiceProvider) CreateClient()
+    {
+        var webApp = new TestWebApplicationFactory<Startup>(); 
+        return (webApp.CreateClient(), webApp.Services);
     }
 }
