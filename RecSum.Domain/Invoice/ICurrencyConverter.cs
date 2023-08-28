@@ -1,4 +1,4 @@
-namespace RecSum.Application.Invoice;
+namespace RecSum.Domain.Invoice;
 
 public interface ICurrencyConverter
 {

@@ -1,10 +1,13 @@
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using RecSum.Application.Invoice.Handlers;
 using RecSum.Application.Invoice.Validations;
 using RecSum.Domain.Configurations;
 using RecSum.Domain.Invoice;
+using RecSum.Logic;
+using RecSum.Logic.Invoice.Handlers;
+using RecSum.Logic.Invoice.Services;
+using RecSum.Logic.Invoice.Validations;
 
 namespace RecSum.Application.Invoice;
 

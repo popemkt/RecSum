@@ -1,4 +1,4 @@
-namespace RecSum.Application.Invoice;
+namespace RecSum.Logic;
 
 public interface IHandler<in TInput, TOutput>
 {

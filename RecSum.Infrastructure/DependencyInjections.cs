@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using RecSum.Application.Invoice;
+using RecSum.Domain.Invoice;
 
 namespace RecSum.Infrastructure;
 

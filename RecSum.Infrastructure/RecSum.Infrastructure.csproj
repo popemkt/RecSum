@@ -7,8 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\RecSum.Logic\RecSum.Logic.csproj" />
+      <ProjectReference Include="..\RecSum.Domain\RecSum.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
+    </ItemGroup>
 
 </Project>

@@ -1,10 +1,11 @@
-using System.Linq;
 using Microsoft.Extensions.Options;
+using RecSum.Application.Invoice;
 using RecSum.Domain.Configurations;
 using RecSum.Domain.Invoice;
 using RecSum.Domain.Repositories;
+using RecSum.Logic.Invoice.Services;
 
-namespace RecSum.Application.Invoice.Handlers;
+namespace RecSum.Logic.Invoice.Handlers;
 
 public class InvoiceSummaryQueryHandler : IHandler<InvoiceSummaryQuery, SummaryDto>
 {

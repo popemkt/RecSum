@@ -19,6 +19,7 @@
     <ItemGroup>
       <ProjectReference Include="..\RecSum.Domain\RecSum.Domain.csproj" />
       <ProjectReference Include="..\RecSum.Infrastructure\RecSum.Infrastructure.csproj" />
+      <ProjectReference Include="..\RecSum.Logic\RecSum.Logic.csproj" />
     </ItemGroup>
 
     <ItemGroup>

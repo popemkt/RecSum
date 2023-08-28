@@ -1,6 +1,6 @@
 using RecSum.Domain.Invoice;
 
-namespace RecSum.Application.Invoice;
+namespace RecSum.Logic.Invoice.Services;
 
 public interface ISummaryCalculator
 {

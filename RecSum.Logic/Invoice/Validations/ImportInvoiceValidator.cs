@@ -4,7 +4,7 @@ using RecSum.Domain.Errors;
 using RecSum.Domain.Invoice;
 using RecSum.Domain.Invoice.Dtos;
 
-namespace RecSum.Application.Invoice.Validations;
+namespace RecSum.Logic.Invoice.Validations;
 
 public class ImportInvoiceValidator : AbstractValidator<ImportInvoiceCommand>
 {

@@ -1,9 +1,10 @@
 using Microsoft.Extensions.Logging;
+using RecSum.Application.Invoice;
 using RecSum.DataAccess;
 using RecSum.Domain.Invoice;
 using RecSum.Domain.Invoice.Dtos;
 
-namespace RecSum.Application.Invoice.Handlers;
+namespace RecSum.Logic.Invoice.Handlers;
 
 public class InvoiceImportCommandHandler : IHandler<ImportInvoiceCommand, bool>
 {
@@ -38,7 +39,7 @@ public class InvoiceImportCommandHandler : IHandler<ImportInvoiceCommand, bool>
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error during import:", ex.Message);
+            _logger.LogError("Error during import: {errorMessage}", ex.Message);
             await transaction.RollbackAsync();
             throw;
         }    }

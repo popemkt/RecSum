@@ -4,6 +4,7 @@ using RecSum.Domain.Constants;
 using RecSum.Domain.Errors;
 using RecSum.Domain.Invoice;
 using RecSum.Domain.Invoice.Dtos;
+using RecSum.Logic.Invoice.Validations;
 using Shouldly;
 
 namespace RecSum.IntegrationTests;
