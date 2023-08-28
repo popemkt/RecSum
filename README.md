@@ -1,5 +1,5 @@
 # How to run
-- Make sure you have **.net7.0** sdk installed
+- Make sure you have [.net7.0](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) sdk installed
 - Use an IDE of choice to run the project normally (VsCode, VisualStudio, Rider)
 - OR Use the command line, when working directory is repo root, execute 
 ```dotnet run --project RecSum.Api/RecSum.Api.csproj```
